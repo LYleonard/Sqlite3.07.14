@@ -119,7 +119,7 @@
 **      | space   未分配空白区 |
 **      |----------------------|   ^  Grows upwards                    //向上增加
 **      | cell content         |   |  Arbitrary order interspersed with freeblocks.
-**      | area  单元内容区域   |   |  and free space fragments.        //任意顺序地散布在自由块。
+**      | area  单元内容区域   |   |  and free space fragments.        //任意顺序地散布在空闲块。
 **      |----------------------|
 **
 ** 页头包含用来管理页的信息，它通常位于页的开始处。对于数据库文件的page 1，
@@ -128,7 +128,7 @@
 **
 **   OFFSET   SIZE     DESCRIPTION
 **      0       1      Flags. 1: intkey, 2: zerodata, 4: leafdata, 8: leaf  //页类型标志。
-**      1       2      byte offset to the first freeblock                   //第1个自由块的偏移量。
+**      1       2      byte offset to the first freeblock                   //第1个自由块的偏移量字节。
 **      3       2      number of cells on this page                         //本页的单元数。
 **      5       2      first byte of the cell content area                  //单元内容区的起始字节（地址）。
 **      7       1      number of fragmented free bytes                      //碎片的字节数。
@@ -183,7 +183,8 @@
 ** the end of the page.  Pointers to the cells are in the cell pointer array
 ** that immediately follows the page header.  Cells is not necessarily
 ** contiguous or in order, but cell pointers are contiguous and in order.
-**记录的指针值必须连续、有序
+** 单元是可变长度的。单元被存储于页的末尾单元内容区域。指向单元的cell指针数组紧跟在页首部的后面。
+** 单元不必是连续或者有序的，但是单元指针是连续和有序的。
 ** Cell content makes use of variable length integers.  A variable
 ** length integer is 1 to 9 bytes where the lower 7 bits of each 
 ** byte are used.  The integer consists of all bytes that have bit 8 set and
@@ -206,15 +207,16 @@
 ** The content of a cell looks like this:
 **
 **    SIZE    DESCRIPTION
-**      4     Page number of the left child. Omitted if leaf flag is set.
-**     var    Number of bytes of data. Omitted if the zerodata flag is set.
-**     var    Number of bytes of key. Or the key itself if intkey flag is set.
+**      4     Page number of the left child. Omitted if leaf flag is set. //左子的页码。如果有叶标志则省略。
+**     var    Number of bytes of data. Omitted if the zerodata flag is set. //数据的字节数，若有zerodata标志则省略。
+**     var    Number of bytes of key. Or the key itself if intkey flag is set.//关键字的字节数，若有intkey标志则是关键字本身。
 **      *     Payload                                                    //Payload内容，存储数据库中某个表一条记录的数据。
 **      4     First page of the overflow chain.  Omitted if no overflow  //溢出页链表中第1个溢出页的页号。如果没有溢出页，无此域。
 **
 ** Overflow pages form a linked list.  Each page except the last is completely
 ** filled with data (pagesize - 4 bytes).  The last page can have as little
 ** as 1 byte of data.
+** 溢出页面形成一个链表。除了最后，每个页面都已填满4字节大小的数据。最后一个页面可能少于4字节。
 **
 **    SIZE    DESCRIPTION
 **      4     Page number of next overflow page
@@ -282,8 +284,8 @@ typedef struct BtLock BtLock;
 ** As each page of the file is loaded into memory, an instance of the following
 ** structure is appended and initialized to zero.  This structure stores
 ** information about the page that is decoded from the raw file page.
-** ** 每当文件的一个页加载到内存，下面结构的一个实例也会增加并被初始化为0。
-** 这个结构存储有页的信息，这些信息从原始的文件页中解码得到的。
+** 每当文件的一个页加载到内存，下面结构的一个实例也会增加并被初始化为0。
+** 这个结构存储关于页的信息，这些信息从原始的文件页中解码得到的。
 **
 ** The pParent field points back to the parent page.  This allows us to
 ** walk up the BTree from any leaf to the root.  Care must be taken to
@@ -436,7 +438,7 @@ struct Btree {
 **
 **   This feature is included to help prevent writer-starvation.
 */
-struct BtShared {
+struct BtShared {  //该对象的一个实例代表一个数据库文件，它包含了一个打开的数据库的所有信息
   Pager *pPager;        /* The page cache */                                       //页缓冲区 
   sqlite3 *db;          /* Database connection currently using this Btree */       //当前正在使用B树的数据库连接
   BtCursor *pCursor;    /* A list of all open cursors */                           //包含当前打开的所有游标的列表 
@@ -488,7 +490,7 @@ struct BtShared {
 ** 此结构的实例用来保存单元头信息。parseCellPtr()负责根据从原始磁盘页中取得的信息填写此结构。
 */
 typedef struct CellInfo CellInfo;
-struct CellInfo {
+struct CellInfo {  //该结构的实例用来保存单元头信息
   i64 nKey;      /* The key for INTKEY tables, or number of bytes in key */    //关键字的字节数。如果intkey标志被设置，此域即为关键字本身。
   u8 *pCell;     /* Pointer to the start of cell content */                    //指向单元内容的指针
   u32 nData;     /* Number of bytes of data */                                 //数据的字节数
@@ -551,7 +553,7 @@ struct BtCursor {           //B树上的游标，游标是指向一个特定条�
 #endif
   u8 hints;                             /* As configured by CursorSetHints() */   //通过CursorSetHints()设置
   i16 iPage;                            /* Index of current page in apPage */     //当前页在apPage中的索引
-  u16 aiIdx[BTCURSOR_MAX_DEPTH];        /* Current index in apPage[i] */          //apPage[i]中的当前索引。空注：单元指针数组中的当前下标。
+  u16 aiIdx[BTCURSOR_MAX_DEPTH];        /* Current index in apPage[i] */          //apPage[i]中的当前索引。注：单元指针数组中的当前下标。
 
   MemPage *apPage[BTCURSOR_MAX_DEPTH];  /* Pages from root to current page */     //从根页到本页的所有页
 }; 

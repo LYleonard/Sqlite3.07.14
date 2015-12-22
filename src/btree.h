@@ -1,4 +1,4 @@
-/*
+﻿/*
 ** 2001 September 15
 **
 ** The author disclaims copyright to this source code.  In place of
@@ -12,6 +12,7 @@
 ** This header file defines the interface that the sqlite B-Tree file
 ** subsystem.  See comments in the source code for a detailed description
 ** of what each interface routine does.
+** 该头文件定义了B树文件子系统的调用接口。对每个接口具体做什么进行了而详细的描述。
 */
 #ifndef _BTREE_H_
 #define _BTREE_H_
@@ -20,7 +21,6 @@
 ** needs to be revisited.
 */
 #define SQLITE_N_BTREE_META 10
-
 /*
 ** If defined as non-zero, auto-vacuum is enabled by default. Otherwise
 ** it must be turned on for each database using "PRAGMA auto_vacuum = 1".
@@ -32,13 +32,12 @@
 #define BTREE_AUTOVACUUM_NONE 0        /* Do not do auto-vacuum */  //不采用auto-vacuum数据库
 #define BTREE_AUTOVACUUM_FULL 1        /* Do full auto-vacuum */    //全部采用auto-vacuum数据库
 #define BTREE_AUTOVACUUM_INCR 2        /* Incremental vacuum */     //增量空间数据库
-
 /*
-** Forward declarations of structure                                //提出结构声明
+** Forward declarations of structure                                //结构声明
 */
-typedef struct Btree Btree;
-typedef struct BtCursor BtCursor;
-typedef struct BtShared BtShared;
+typedef struct Btree Btree;        //用新类型名Btree代表结构体类型并定义Btree类型的结构体变量Btree
+typedef struct BtCursor BtCursor;  //用新类型名BTCursor代表结构体类型并定义Btree类型的结构体变量BTCursor
+typedef struct BtShared BtShared;  //用新类型名BtShared代表结构体类型并定义Btree类型的结构体变量BtShared
 
 
 int sqlite3BtreeOpen(                                              //打开数据库文件并返回B树对象
@@ -55,7 +54,7 @@ int sqlite3BtreeOpen(                                              //打开数�
 **
 ** NOTE:  These values must match the corresponding PAGER_ values in
 ** pager.h.
-** sqlite3BtreeOpen标记参数可以是按位或者下列的值。注意：这些值必须和pager.h头文件中PAGER_ values相对应。
+** sqlite3BtreeOpen标记参数可以是按位或者下列的值.注意：这些值必须和pager.h头文件中PAGER_ values相对应.
 */
 #define BTREE_OMIT_JOURNAL  1  /* Do not create or use a rollback journal */   //不创建或使用回滚日志
 #define BTREE_MEMORY        2  /* This is an in-memory DB */                   //这是一个内存数据库
@@ -65,35 +64,35 @@ int sqlite3BtreeOpen(                                              //打开数�
 int sqlite3BtreeClose(Btree*);                                                 //关闭数据库并使所有游标无效
 int sqlite3BtreeSetCacheSize(Btree*,int);                                      //控制页缓存大小
 int sqlite3BtreeSetSafetyLevel(Btree*,int,int,int);    //改变磁盘数据的访问方式，以增加或减少数据库抵御操作系统崩溃或电源故障等损害的能力
-int sqlite3BtreeSyncDisabled(Btree*);
+int sqlite3BtreeSyncDisabled(Btree*);                  //如果在磁盘上没有sync()同步函数，则不能同步
 int sqlite3BtreeSetPageSize(Btree *p, int nPagesize, int nReserve, int eFix);  //设置数据库页大小
 int sqlite3BtreeGetPageSize(Btree*);                                           //返回数据库页大小
 int sqlite3BtreeMaxPageCount(Btree*,int);                                      //设置数据库的最大页数
-u32 sqlite3BtreeLastPage(Btree*);                                              //最后页
+u32 sqlite3BtreeLastPage(Btree*);                                              //返回B树的最后一个页的大小
 int sqlite3BtreeSecureDelete(Btree*,int);                                      //设置BTS_SECURE_DELETE标志
 int sqlite3BtreeGetReserve(Btree*);                                            //页中未被使用的字节数
 int sqlite3BtreeSetAutoVacuum(Btree *, int);                                   //设置数据库自动清理空闲页属性
 int sqlite3BtreeGetAutoVacuum(Btree *);                                        //获取数据库是否是自动清理页
 int sqlite3BtreeBeginTrans(Btree*,int);                                        //开始一个新事务
-int sqlite3BtreeCommitPhaseOne(Btree*, const char *zMaster);
-int sqlite3BtreeCommitPhaseTwo(Btree*, int);
+int sqlite3BtreeCommitPhaseOne(Btree*, const char *zMaster);                   //两阶段提交的第一阶段
+int sqlite3BtreeCommitPhaseTwo(Btree*, int);                                   //两阶段提交的第二阶段
 int sqlite3BtreeCommit(Btree*);                                                //提交当前事务
 int sqlite3BtreeRollback(Btree*,int);                                          //回滚当前进程中的事务
 int sqlite3BtreeBeginStmt(Btree*,int);                                         //开始一个语句子事务
-int sqlite3BtreeCreateTable(Btree*, int*, int flags);                          //在数据库中创建一个空B树，采用图格式（B+树）或索引格式（B树）
-int sqlite3BtreeIsInTrans(Btree*);
-int sqlite3BtreeIsInReadTrans(Btree*);
-int sqlite3BtreeIsInBackup(Btree*);
-void *sqlite3BtreeSchema(Btree *, int, void(*)(void *));
-int sqlite3BtreeSchemaLocked(Btree *pBtree);
-int sqlite3BtreeLockTable(Btree *pBtree, int iTab, u8 isWriteLock);
-int sqlite3BtreeSavepoint(Btree *, int, int);
+int sqlite3BtreeCreateTable(Btree*, int*, int flags);                          //在数据库中创建一个空B树，采用图格式(B+树)或索引格式(B树)
+int sqlite3BtreeIsInTrans(Btree*);                                             //是否在事务中
+int sqlite3BtreeIsInReadTrans(Btree*);                                         //在读或写事务中
+int sqlite3BtreeIsInBackup(Btree*);                                            //回滚事务
+void *sqlite3BtreeSchema(Btree *, int, void(*)(void *));                       //B树模式
+int sqlite3BtreeSchemaLocked(Btree *pBtree);                                   //B树模式锁
+int sqlite3BtreeLockTable(Btree *pBtree, int iTab, u8 isWriteLock);            //获得表的根页iTab上的锁
+int sqlite3BtreeSavepoint(Btree *, int, int);                                  //根据第二个参数参数释放或者回滚保存点
 
-const char *sqlite3BtreeGetFilename(Btree *);
-const char *sqlite3BtreeGetJournalname(Btree *);
-int sqlite3BtreeCopyFile(Btree *, Btree *);
+const char *sqlite3BtreeGetFilename(Btree *);                                  //返回底层数据库文件中完整的路径名
+const char *sqlite3BtreeGetJournalname(Btree *);                               //返回数据库中日志文件的路径名
+int sqlite3BtreeCopyFile(Btree *, Btree *);                                    //拷贝第二个参数的完整内容到第一个参数
 
-int sqlite3BtreeIncrVacuum(Btree *);
+int sqlite3BtreeIncrVacuum(Btree *);                                           //增量式清理函数
 
 /* The flags parameter to sqlite3BtreeCreateTable can be the bitwise OR
 ** of the flags shown below.
@@ -113,7 +112,7 @@ int sqlite3BtreeClearTable(Btree*, int, int*);                 //删除B树中�
 void sqlite3BtreeTripAllCursors(Btree*, int);                  //遍历所有游标
 
 void sqlite3BtreeGetMeta(Btree *pBtree, int idx, u32 *pValue); //读数据库文件的元数据信息
-int sqlite3BtreeUpdateMeta(Btree*, int idx, u32 value);
+int sqlite3BtreeUpdateMeta(Btree*, int idx, u32 value);        //把meta-information写回数据库，更新元数据
 
 /*
 ** The second parameter to sqlite3BtreeGetMeta or sqlite3BtreeUpdateMeta
@@ -142,7 +141,7 @@ int sqlite3BtreeUpdateMeta(Btree*, int idx, u32 value);
 */
 #define BTREE_BULKLOAD 0x00000001
 
-int sqlite3BtreeCursor(     //创建一个指向特定B树的游标。可以是读或写游标，但读游标和写游标不能同时在同一B树中存在
+int sqlite3BtreeCursor(     //创建一个指向特定B树的游标.可以是读或写游标，但读游标和写游标不能同时在同一B树中存在
   Btree*,                              /* BTree containing table to open */      //打开B树包含的表
   int iTable,                          /* Index of root page */                  //根页索引
   int wrFlag,                          /* 1 for writing.  0 for read-only */     //wrFlag值为1时表示正在写，为0时为只读
@@ -185,15 +184,15 @@ struct Pager *sqlite3BtreePager(Btree*);                          //返回与B�
 int sqlite3BtreePutData(BtCursor*, u32 offset, u32 amt, void*);   //修改数据内容
 void sqlite3BtreeCacheOverflow(BtCursor *);                       //此函数在游标上设置一个溢出页缓存标志
 void sqlite3BtreeClearCursor(BtCursor *);                         //清除当前游标位置
-int sqlite3BtreeSetVersion(Btree *pBt, int iVersion);
-void sqlite3BtreeCursorHints(BtCursor *, unsigned int mask);
+int sqlite3BtreeSetVersion(Btree *pBt, int iVersion);             //在数据库头部设置"读版本"和"写版本"域
+void sqlite3BtreeCursorHints(BtCursor *, unsigned int mask);      //设置游标的掩码标志参,一个参数为游标
 
 #ifndef NDEBUG
-int sqlite3BtreeCursorIsValid(BtCursor*);
+int sqlite3BtreeCursorIsValid(BtCursor*);                 //给定的BtCursor是否有效
 #endif
 
 #ifndef SQLITE_OMIT_BTREECOUNT
-int sqlite3BtreeCount(BtCursor *, i64 *);
+int sqlite3BtreeCount(BtCursor *, i64 *);                 //给B树上的条目计数
 #endif
 
 #ifdef SQLITE_TEST
@@ -202,13 +201,14 @@ void sqlite3BtreeCursorList(Btree*);
 #endif
 
 #ifndef SQLITE_OMIT_WAL
-  int sqlite3BtreeCheckpoint(Btree*, int, int *, int *);
+  int sqlite3BtreeCheckpoint(Btree*, int, int *, int *);     //执行B树上的检查点作为第一个参数传递
 #endif
 
 /*
 ** If we are not using shared cache, then there is no need to
 ** use mutexes to access the BtShared structures.  So make the
 ** Enter and Leave procedures no-ops.
+** 如果我们不用共享缓存,那么没有必要使用互斥量访问BtShared结构.确保进入和离开过程不做任何操作.
 */
 #ifndef SQLITE_OMIT_SHARED_CACHE
   void sqlite3BtreeEnter(Btree*);
@@ -226,6 +226,7 @@ void sqlite3BtreeCursorList(Btree*);
   void sqlite3BtreeLeaveAll(sqlite3*);
 #ifndef NDEBUG
   /* These routines are used inside assert() statements only. */
+  //以下函数都被用于assert()语句中.
   int sqlite3BtreeHoldsMutex(Btree*);
   int sqlite3BtreeHoldsAllMutexes(sqlite3*);
   int sqlite3SchemaMutexHeld(sqlite3*,int,Schema*);

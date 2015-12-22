@@ -1,4 +1,4 @@
-﻿/*
+/*
 ** 2004 April 6
 **
 ** The author disclaims copyright to this source code.  In place of
@@ -4021,9 +4021,9 @@ int sqlite3BtreeCommitPhaseTwo(Btree *p, int bCleanup){
 }
 
 /*
-** Do both phases of a commit.  两阶段事务提交
+** Do both phases of a commit.  
 */
-int sqlite3BtreeCommit(Btree *p){
+int sqlite3BtreeCommit(Btree *p){//两阶段事务提交
   int rc;
   sqlite3BtreeEnter(p);
   rc = sqlite3BtreeCommitPhaseOne(p, 0);
@@ -4210,7 +4210,7 @@ int sqlite3BtreeBeginStmt(Btree *p, int iStatement){  //开始一个语句子事
 ** 情况下, 整个事务的内容回滚.这与正常的事务回滚是不同的,因为没有锁释放,事务仍然开放.
 */
 /*op为SAVEPOINT_ROLLBACK或SAVEPOINT_RELEASE,根据此值释放或者回滚保存点*/
-int sqlite3BtreeSavepoint(Btree *p, int op, int iSavepoint){    //是释放还是回滚保存点依赖于参数op的值
+int sqlite3BtreeSavepoint(Btree *p, int op, int iSavepoint){    //根据参数op的值释放或者回滚保存点
   int rc = SQLITE_OK;
   if( p && p->inTrans==TRANS_WRITE ){
     BtShared *pBt = p->pBt;
@@ -4343,7 +4343,7 @@ B树数据库,连接持有所需的表锁,
 创建一个指向特定B-tree的游标.游标可以是读游标,也可以是写游标,但是读游标和写游标不能同时在
 同一个B-tree中存在.
 */
-int sqlite3BtreeCursor(
+int sqlite3BtreeCursor(//创建一个指向特定B-tree的游标.游标可以是读游标,也可以是写游标,但是读游标和写游标不能同时在同一个B-tree中存在.
   Btree *p,                                   /* The btree */                                        //p为B树
   int iTable,                                 /* Root page of table to open */            //开放的表的根页
   int wrFlag,                                 /* 1 to write. 0 read-only */                  //wrFlag为1表示写,0表示只读
@@ -4973,7 +4973,7 @@ int sqlite3BtreeKey(BtCursor *pCur, u32 offset, u32 amt, void *pBuf){
 /*
 返回当前游标所指记录的数据
 */
-int sqlite3BtreeData(BtCursor *pCur, u32 offset, u32 amt, void *pBuf){        
+int sqlite3BtreeData(BtCursor *pCur, u32 offset, u32 amt, void *pBuf){ //返回当前游标所指记录的数据  
   int rc;
 
 #ifndef SQLITE_OMIT_INCRBLOB
@@ -8389,7 +8389,7 @@ static int btreeCreateTable(Btree *p, int *piTable, int createTabFlags){ //创�
 }
 
 /*在数据库中创建一个空B树,采用图格式(B+树)或索引格式(B树)*/
-int sqlite3BtreeCreateTable(Btree *p, int *piTable, int flags){ 
+int sqlite3BtreeCreateTable(Btree *p, int *piTable, int flags){ //在数据库中创建一个空B树,采用图格式(B+树)或索引格式(B树)
   int rc;
   sqlite3BtreeEnter(p);
   rc = btreeCreateTable(p, piTable, flags); //创建新的B树表.新表根页页码写到*piTable
