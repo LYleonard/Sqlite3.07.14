@@ -4281,14 +4281,14 @@ int sqlite3BtreeSavepoint(Btree *p, int op, int iSavepoint){    //根据参数op
 假设在调用这个程序之前,sqlite3BtreeCursorZero()被调用,
 用pCur初始化内存空间.
 */
-static int btreeCursor(
+static int btreeCursor(   //为BTree创建一个新的游标
   Btree *p,                              /* The btree */                                  //p为B树
   int iTable,                            /* Root page of table to open */      //开放的表的根页
   int wrFlag                           /* 1 to write. 0 read-only */              //wrFlag为1表示写,0表示只读
   struct KeyInfo *pKeyInfo,              /* First arg to comparison function */     //比较函数的第一个参数
-  BtCursor *pCur                         /* Space for new cursor */        //新游标空间
+  BtCursor *pCur                         /* Space for new cursor */        //新游标
 ){
-  BtShared *pBt = p->pBt;                /* Shared b-tree handle */   //可共享B树句柄
+  BtShared *pBt = p->pBt;                /* Shared b-tree handle */   //共享B树句柄
 
   assert( sqlite3BtreeHoldsMutex(p) );
   assert( wrFlag==0 || wrFlag==1 );
@@ -4313,10 +4313,10 @@ B树数据库,连接持有所需的表锁,
   assert( wrFlag==0 || p->inTrans==TRANS_WRITE );
   assert( pBt->pPage1 && pBt->pPage1->aData );
 
-  if( NEVER(wrFlag && (pBt->btsFlags & BTS_READ_ONLY)!=0) ){
+  if( NEVER(wrFlag && (pBt->btsFlags & BTS_READ_ONLY)!=0) ){//如果标志为只读
     return SQLITE_READONLY;
   }
-  if( iTable==1 && btreePagecount(pBt)==0 ){
+  if( iTable==1 && btreePagecount(pBt)==0 ){//如果表根页号为1，并且页的大小为0
     assert( wrFlag==0 );
     iTable = 0;
   }
@@ -5077,7 +5077,7 @@ static const unsigned char *fetchPayload(       //返回从pCur游标正在指�
 	对于游标pCur指向条目,返回key 或者 data的几个字节.写可用的字节数到*pAmt.
 	返回的指针是短暂的.在下一次调用任何B树函数的时候,key/data可能移动或被销毁,
 	包括其他线程对相同缓存的调用.因此BtShared上的一个互斥锁应该在调用这个函数
-	前被持有这个程序在没有溢出页使用的常见情况下,用于快速访问key 和 data.
+	前被持有这个程序。在没有溢出页使用的常见情况下,用于快速访问key 和 data.
 	*/
 
 const void *sqlite3BtreeKeyFetch(BtCursor *pCur, int *pAmt){  //用于快速访问key
@@ -8100,7 +8100,7 @@ end_insert:
 ** 删除游标指向的条目,使之指着任意位置.
 */
 /*删除游标所指记录*/
-int sqlite3BtreeDelete(BtCursor *pCur){    //删除游标指向的条目,使之指着任意位置
+int sqlite3BtreeDelete(BtCursor *pCur){    //删除游标指向的条目,使游标指着任意位置
   Btree *p = pCur->pBtree;
   BtShared *pBt = p->pBt;              
   int rc;                              /* Return code */                     //返回代码

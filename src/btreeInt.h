@@ -550,8 +550,8 @@ struct BtCursor {           //B树上的游标，游标是指向一个特定条�
   u8 eState;                /* One of the CURSOR_XXX constants (see below) */     //CURSOR_XXX常量之一
 #ifndef SQLITE_OMIT_INCRBLOB
   u8 isIncrblobHandle;      /* True if this cursor is an incr. io handle */       //如果游标是一个incr.io句柄则为真
-#endif
-  u8 hints;                             /* As configured by CursorSetHints() */   //通过CursorSetHints()设置
+#endif 
+  u8 hints;                             /* As configured by CursorSetHints() */   //游标的掩码位，通过CursorSetHints()设置
   i16 iPage;                            /* Index of current page in apPage */     //当前页在apPage中的索引
   u16 aiIdx[BTCURSOR_MAX_DEPTH];        /* Current index in apPage[i] */          //apPage[i]中的当前索引。注：单元指针数组中的当前下标。
 
