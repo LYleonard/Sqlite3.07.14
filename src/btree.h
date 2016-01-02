@@ -40,7 +40,7 @@ typedef struct BtCursor BtCursor;  //用新类型名BTCursor代表结构体类�
 typedef struct BtShared BtShared;  //用新类型名BtShared代表结构体类型并定义Btree类型的结构体变量BtShared
 
 
-int sqlite3BtreeOpen(                                              //打开数据库文件并返回B树对象
+int sqlite3BtreeOpen(                           //打开数据库文件并返回B树对象
   sqlite3_vfs *pVfs,       /* VFS to use with this b-tree */       //B树采用VFS文件系统
   const char *zFilename,   /* Name of database file to open */     //打开的数据库文件的名称
   sqlite3 *db,             /* Associated database connection */    //相关数据库连接

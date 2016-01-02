@@ -2375,9 +2375,9 @@ int sqlite3BtreeOpen(     //打开数据库文件并返回B树对象
       goto btree_open_out;
     }
     rc = sqlite3PagerOpen(pVfs, &pBt->pPager, zFilename,
-                          EXTRA_SIZE, flags, vfsFlags, pageReinit);
+                          EXTRA_SIZE, flags, vfsFlags, pageReinit);//分配并且初始化一个新页面对象
     if( rc==SQLITE_OK ){
-      rc = sqlite3PagerReadFileheader(pBt->pPager,sizeof(zDbHeader),zDbHeader);
+      rc = sqlite3PagerReadFileheader(pBt->pPager,sizeof(zDbHeader),zDbHeader);//读取文件头
     }
     if( rc!=SQLITE_OK ){
       goto btree_open_out;
