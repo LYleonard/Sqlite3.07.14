@@ -2189,12 +2189,12 @@ static int btreeInvokeBusyHandler(void *pArg){ //调用btree繁忙的处理程�
 ** Either way, the ephemeral database will be automatically deleted              
 ** when sqlite3BtreeClose() is called. 
 ** zFilename是这个数据库文件的名字.如果zFilename为空,则将创建一个临时数据库.
-** 这个临时数据库在内存中唯一的,或用了基于磁盘的内存缓存无论哪种方式当sqlite3BtreeClose()被调用的时候,
+** 这个临时数据库在内存中唯一的,或用了基于磁盘的内存缓存，无论哪种方式当sqlite3BtreeClose()被调用的时候,
 ** 这个临时数据库将自动删除.
 **
 ** If zFilename is ":memory:" then an in-memory database is created  
 ** that is automatically destroyed when it is closed.
-** 如果zFilename是":memory:"那么关闭时自动销毁的内存数据库将会创建.
+** 如果zFilename是":memory:"那么内存数据库将会创建并且关闭时自动销毁.
 **
 ** The "flags" parameter is a bitmask that might contain bits like
 ** BTREE_OMIT_JOURNAL and/or BTREE_MEMORY.  
@@ -2229,7 +2229,7 @@ int sqlite3BtreeOpen(     //打开数据库文件并返回B树对象
   Btree *p;                      /* Handle to return */                         //返回的句柄
   sqlite3_mutex *mutexOpen = 0;  /* Prevents a race condition. Ticket #3537 */  //避免竞态条件.标签#3537
   int rc = SQLITE_OK;            /* Result code from this function */           //这个函数的状态码
-  u8 nReserve;                   /* Byte of unused space on each page */        //每个页上的不用空间的字节数
+  u8 nReserve;                   /* Byte of unused space on each page */        //每个页上的未用空间的字节数
   unsigned char zDbHeader[100];  /* Database header content */                  //数据库文件头内容
 
   /* True if opening an ephemeral, temporary database */
@@ -2282,7 +2282,7 @@ int sqlite3BtreeOpen(     //打开数据库文件并返回B树对象
   /*
   ** If this Btree is a candidate for shared cache, try to find an
   ** existing BtShared object that we can share with
-  ** 如果这Btree共享缓存是候选的,尝试找到一个可共享的存在的BtShared对象.
+  ** 如果这Btree共享缓存是候选的,尝试找到一个可共享的已存在的BtShared对象.
   */
   /*【潘光珍】如果这B树是一个共享缓存的候选,则试图找到一个现有的btshared对象可以让我们分享*/
   if( isTempDb==0 && (isMemdb==0 || (vfsFlags&SQLITE_OPEN_URI)!=0) ){
@@ -2358,7 +2358,7 @@ int sqlite3BtreeOpen(     //打开数据库文件并返回B树对象
     ** The following asserts make sure that structures used by the btree are
     ** the right size.  This is to guard against size changes that result
     ** when compiling on a different architecture.
-	** 下面的断言是确保B树使用的结构的大小是正确的.这是为了防止编译不同的架构时大小变化的结果.
+	** 下面的断言是确保B树使用的结构的大小是正确的.这是为了防止编译不同的架构时结果的大小变化.
     */
 	  /*
 	  【潘光珍】以下断言确保使用的B树结构正确的大小。这是在一个不同的体系结构编译时，对结果的大小变化进行保护。
@@ -4269,10 +4269,10 @@ int sqlite3BtreeSavepoint(Btree *p, int op, int iSavepoint){    //根据参数op
 */
 /*
 为BTree创建一个新的游标,B树的根在页iTable上.
-如果请求一个只读游标,数据库上至少有一个只读事务打开.
+如果请求一个只读游标,数据库上至少打开一个只读事务.
 如果被请求的是写游标,必须有一打开的写事务.
 如wrFlag== 0,则游标仅能用于读取.
-如wrFlag== 1,则游标可用于读或者用于写.
+如果wrFlag== 1并且其他条件也满足,则游标可用于读或者写.
 1：wrFlag==1游标必须已经打开.
 2：共享相同的页缓存, 不是READ_UNCOMMITTED状态,wrFlag==0 时,
 游标可能不是打开状态.
@@ -4282,11 +4282,11 @@ int sqlite3BtreeSavepoint(Btree *p, int op, int iSavepoint){    //根据参数op
 用pCur初始化内存空间.
 */
 static int btreeCursor(   //为BTree创建一个新的游标
-  Btree *p,                              /* The btree */                                  //p为B树
-  int iTable,                            /* Root page of table to open */      //开放的表的根页
+  Btree *p,                              /* The btree */                          //p为B树
+  int iTable,                            /* Root page of table to open */         //开放的表的根页
   int wrFlag                           /* 1 to write. 0 read-only */              //wrFlag为1表示写,0表示只读
-  struct KeyInfo *pKeyInfo,              /* First arg to comparison function */     //比较函数的第一个参数
-  BtCursor *pCur                         /* Space for new cursor */        //新游标
+  struct KeyInfo *pKeyInfo,              /* First arg to comparison function */   //比较函数的第一个参数
+  BtCursor *pCur                         /* Space for new cursor */               //新游标
 ){
   BtShared *pBt = p->pBt;                /* Shared b-tree handle */   //共享B树句柄
 
@@ -4308,7 +4308,7 @@ B树数据库,连接持有所需的表锁,
   assert( hasSharedCacheTableLock(p, iTable, pKeyInfo!=0, wrFlag+1) );
   assert( wrFlag==0 || !hasReadConflicts(p, iTable) );
 
-  /* Assert that the caller has opened the required transaction. */  //断言调用者以开放了所需的事务.
+  /* Assert that the caller has opened the required transaction. */  //断言调用者已开放了所需的事务.
   assert( p->inTrans>TRANS_NONE );
   assert( wrFlag==0 || p->inTrans==TRANS_WRITE );
   assert( pBt->pPage1 && pBt->pPage1->aData );
@@ -4344,11 +4344,11 @@ B树数据库,连接持有所需的表锁,
 同一个B-tree中存在.
 */
 int sqlite3BtreeCursor(//创建一个指向特定B-tree的游标.游标可以是读游标,也可以是写游标,但是读游标和写游标不能同时在同一个B-tree中存在.
-  Btree *p,                                   /* The btree */                                        //p为B树
+  Btree *p,                                   /* The btree */                             //p为B树
   int iTable,                                 /* Root page of table to open */            //开放的表的根页
-  int wrFlag,                                 /* 1 to write. 0 read-only */                  //wrFlag为1表示写,0表示只读
-  struct KeyInfo *pKeyInfo,                   /* First arg to xCompare() */   //比较函数的第一个参数
-  BtCursor *pCur                              /* Write new cursor here */            //写新的游标到这里
+  int wrFlag,                                 /* 1 to write. 0 read-only */               //wrFlag为1表示写,0表示只读
+  struct KeyInfo *pKeyInfo,                   /* First arg to xCompare() */               //比较函数的第一个参数
+  BtCursor *pCur                              /* Write new cursor here */                 //写新的游标到这里
 ){
   int rc;
   sqlite3BtreeEnter(p);
@@ -6735,7 +6735,7 @@ NN的最小值是1.增加NN到1以上(2或3), 能够改善SELECT和DELETE性能.
 ** a new entry is being inserted on the extreme right-end of the
 ** tree, in other words, when the new entry will become the largest
 ** entry in the tree.
-** 这个balance()版本处理常见的特殊情况,一个新条目被插入到树的最右端.
+** 这个balance()版本处理一些特殊情况,一个新条目被插入到树的最右端.
 ** 换句话说,当新条目将成为树中最大的条目.
 ** Instead of trying to balance the 3 right-most leaf pages, just add
 ** a new page to the right-hand side and put the one new entry in
@@ -6979,7 +6979,7 @@ static void copyNodeContent(MemPage *pFrom, MemPage *pTo, int *pRC){   //复制p
 ** 这个函数在 pParent的第iParentIdx孩子上重新分配单元(以下简称“页面”)和达到2个兄弟节点,
 ** 这样对所有页面都有相同数量的自由空间.通常在页面两侧的一个兄弟节点是平衡的,
 ** 如果页面的父节点是第一个或最后一个孩子则兄弟节点可能来自一侧.如果页面已经少于2兄弟
-** (如果页面是一个根或根的子页面,有些移动席可能唯一发生)然后所有可用的兄弟姐妹参与平衡.
+** (如果页面是一个根或根的子页面,有些移动可能出现)然后所有可用的兄弟姐妹参与平衡.
 ** The number of siblings of the page might be increased or decreased by 
 ** one or two in an effort to keep pages nearly full but not over full. 
 ** 页面的兄弟的数量可能会增加或减少一个或两个,尽量保持页面几乎填满但不完全为满.
@@ -7996,7 +7996,7 @@ int sqlite3BtreeInsert(          //插入新记录到B树
   /* If this is an insert into a table b-tree, invalidate any incrblob 
   ** cursors open on the row being replaced (assuming this is a replace
   ** operation - if it is not, the following is a no-op).  
-  ** 如果插入到表B树,使在被替换的行上的任何开放性的递增blob游标.(假设这是一个替换操作,如果不是,则无操作.)*/
+  ** 如果插入到表B树,使在被替换的行上的任何开放性的递增blob游标无效.(假设这是一个替换操作,如果不是,则无操作.)*/
   if( pCur->pKeyInfo==0 ){
     invalidateIncrblobCursors(p, nKey, 0);   //使开放的行或行中的一个被修改的一个incrblob游标无效
   }
